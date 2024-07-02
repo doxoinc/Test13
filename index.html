@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title>Unity WebGL Player | DuckClickerGame</title>
+    <script src="https://www.gstatic.com/firebasejs/7.19.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/7.19.1/firebase-database.js"></script>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script type="module">
+          // Import the functions you need from the SDKs you need
+          import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+          import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-analytics.js";
+          // TODO: Add SDKs for Firebase products that you want to use
+          // https://firebase.google.com/docs/web/setup#available-libraries
+
+          // Your web app's Firebase configuration
+          // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+          const firebaseConfig = {
+            apiKey: "AIzaSyDKydUb67p-Zr6_IZyrfWiQoJBRaJsiHSI",
+            authDomain: "webapp-duckclicker.firebaseapp.com",
+            databaseURL: "https://webapp-duckclicker-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "webapp-duckclicker",
+            storageBucket: "webapp-duckclicker.appspot.com",
+            messagingSenderId: "514804075853",
+            appId: "1:514804075853:web:f4e73b44f6da08a3043b04",
+            measurementId: "G-W4P4CTD665"
+          };
+
+          // Initialize Firebase
+          const app = initializeApp(firebaseConfig);
+          const analytics = getAnalytics(app);
+    </script>
+    <script>
+
+        // Function to save game data
+        function SaveGameData(jsonData) {
+            const userId = Telegram.WebApp.initDataUnsafe.user.id;
+            firebase.database().ref('users/' + userId).set(JSON.parse(jsonData))
+                .then(() => console.log("Data saved successfully."))
+                .catch((error) => console.log("Firebase save failed: " + error.message));
+        }
+
+        // Function to load game data
+        function LoadGameData() {
+            const userId = Telegram.WebApp.initDataUnsafe.user.id;
+            firebase.database().ref('users/' + userId).once('value')
+                .then((snapshot) => {
+                    if (snapshot.exists()) {
+                        const jsonData = JSON.stringify(snapshot.val());
+                        unityInstance.SendMessage('GameManager', 'OnGameDataLoaded', jsonData);
+                    } else {
+                        console.log("No data available for this user.");
+                    }
+                })
+                .catch((error) => {
+                    console.log("Firebase load failed: " + error.message);
+                });
+        }
+    </script>
+</head>
+<body style="text-align: center; padding: 0; border: 0; margin: 0;">
+    <canvas id="unity-canvas" width=1284 height=2778 tabindex="-1" style="width: 1284px; height: 2778px; background: #231F20"></canvas>
+    <script src="Build/DuckClickerTest.loader.js"></script>
+    <script>
+        if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
+            var meta = document.createElement('meta');
+            meta.name = 'viewport';
+            meta.content = 'width=device-width, height=device-height, initial-scale=1.0, user-scalable=no, shrink-to-fit=yes';
+            document.getElementsByTagName('head')[0].appendChild(meta);
+
+            var canvas = document.querySelector("#unity-canvas");
+            canvas.style.width = "100%";
+            canvas.style.height = "100%";
+            canvas.style.position = "fixed";
+            document.body.style.textAlign = "left";
+        }
+
+        createUnityInstance(document.querySelector("#unity-canvas"), {
+            dataUrl: "Build/DuckClickerTest.data",
+            frameworkUrl: "Build/DuckClickerTest.framework.js",
+            codeUrl: "Build/DuckClickerTest.wasm",
+            streamingAssetsUrl: "StreamingAssets",
+            companyName: "DefaultCompany",
+            productName: "DuckClickerGame",
+            productVersion: "1.0.2",
+        }).then((unityInstance) => {
+            window.unityInstance = unityInstance;
+        });
+    </script>
+</body>
+</html>
